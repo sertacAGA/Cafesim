@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cafe Simülatörü</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: sans-serif; }
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 10px;
+      background: rgba(255,255,255,0.8);
+      border-radius: 8px;
+    }
+    .item {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      padding: 8px 12px;
+      background: #333;
+      color: white;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+<div id="info">Sipariş: <span id="order">Kek</span></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+<script>
+  let scene = new THREE.Scene();
+  let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+  let renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  // Zemin
+  let floorGeometry = new THREE.PlaneGeometry(20, 20);
+  let floorMaterial = new THREE.MeshBasicMaterial({ color: 0xaaaaaa });
+  let floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.rotation.x = -Math.PI / 2;
+  scene.add(floor);
+
+  // Ürünler: Çay (kırmızı), Kahve (kahverengi), Kek (sarı)
+  const items = [
+    { name: "Çay", color: 0xff0000, position: [-4, 0.5, 0] },
+    { name: "Kahve", color: 0x8b4513, position: [0, 0.5, 0] },
+    { name: "Kek", color: 0xffff00, position: [4, 0.5, 0] }
+  ];
+  const clickable = [];
+  items.forEach(item => {
+    let geom = new THREE.BoxGeometry(1, 1, 1);
+    let mat = new THREE.MeshBasicMaterial({ color: item.color });
+    let mesh = new THREE.Mesh(geom, mat);
+    mesh.position.set(...item.position);
+    mesh.name = item.name;
+    scene.add(mesh);
+    clickable.push(mesh);
+  });
+
+  // Müşteri: basit bir yeşil kutu
+  let customer = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 2, 1),
+    new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+  );
+  customer.position.set(0, 1, -5);
+  scene.add(customer);
+
+  // Kamera
+  camera.position.set(0, 5, 10);
+  camera.lookAt(0, 0, 0);
+
+  // Sipariş
+  let currentOrder = "Kek";
+  document.getElementById("order").textContent = currentOrder;
+
+  // Tıklama ile kontrol
+  window.addEventListener('click', (event) => {
+    const mouse = new THREE.Vector2(
+      (event.clientX / window.innerWidth) * 2 - 1,
+      -(event.clientY / window.innerHeight) * 2 + 1
+    );
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(clickable);
+
+    if (intersects.length > 0) {
+      const selected = intersects[0].object.name;
+      if (selected === currentOrder) {
+        alert("Doğru sipariş! " + selected);
+        // Yeni sipariş ata
+        const options = ["Çay", "Kahve", "Kek"];
+        currentOrder = options[Math.floor(Math.random() * options.length)];
+        document.getElementById("order").textContent = currentOrder;
+      } else {
+        alert("Yanlış ürün! Bu " + selected);
+      }
+    }
+  });
+
+  // Render döngüsü
+  function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+  }
+  animate();
+</script>
+</body>
+</html>
