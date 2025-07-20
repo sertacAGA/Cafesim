@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cafe Simulator</title>
+  <style>
+    body { margin: 0; overflow: hidden; font-family: sans-serif; }
+    #info {
+      position: absolute;
+      top: 10px; left: 10px;
+      color: white;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">Müşteri: Kahve istiyor</div>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script>
+    let scene = new THREE.Scene();
+    let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    let renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Işık
+    let light = new THREE.AmbientLight(0xffffff);
+    scene.add(light);
+
+    // Ürünler
+    const items = {
+      cay: new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({ color: "red" })),
+      kahve: new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({ color: "brown" })),
+      kek: new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({ color: "yellow" }))
+    };
+    items.cay.position.x = -2;
+    items.kahve.position.x = 0;
+    items.kek.position.x = 2;
+
+    scene.add(items.cay);
+    scene.add(items.kahve);
+    scene.add(items.kek);
+
+    camera.position.z = 5;
+
+    let siparisListesi = ["kahve", "cay", "kek"];
+    let mevcutSiparis = "kahve";
+    const info = document.getElementById("info");
+
+    // Raycaster
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function rastgeleSiparis() {
+      mevcutSiparis = siparisListesi[Math.floor(Math.random() * siparisListesi.length)];
+      info.innerText = "Müşteri: " + mevcutSiparis + " istiyor";
+    }
+
+    function onMouseClick(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(Object.values(items));
+
+      if (intersects.length > 0) {
+        const secilen = intersects[0].object;
+        const ad = Object.keys(items).find(key => items[key] === secilen);
+        if (ad === mevcutSiparis) {
+          alert("Doğru sipariş!");
+        } else {
+          alert("Yanlış sipariş!");
+        }
+        rastgeleSiparis();
+      }
+    }
+
+    window.addEventListener("click", onMouseClick, false);
+
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>
